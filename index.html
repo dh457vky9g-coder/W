@@ -23,10 +23,11 @@ button:active{background:#eee}
 .timer{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;flex:1;min-height:0;margin:4px 0}
 .time-part{font-size:clamp(58px,13vw,88px);font-weight:850;line-height:1.02;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:-.035em}
 .rest-controls{display:flex;flex-direction:column;gap:9px;margin-top:auto;flex:0 0 auto}
-.rest-setting{border:2px solid #000;border-radius:18px;overflow:hidden;padding:0 8px 5px}
-.rest-label{text-align:center;font-size:clamp(16px,3.7vw,23px);font-weight:800;padding:7px 2px 5px}
+.settings-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.rest-setting{border:2px solid #000;border-radius:18px;overflow:hidden;padding:0 6px 5px;min-width:0}
+.rest-label{text-align:center;font-size:clamp(11px,2.8vw,18px);font-weight:800;padding:7px 1px 5px;white-space:normal;line-height:1.15;min-height:35px;display:flex;align-items:center;justify-content:center}
 .rest-setting-line{height:2px;background:#000}
-.rest-input{display:block;width:100%;height:clamp(52px,8vh,68px);border:0;border-radius:0;background:#fff;color:#000;text-align:center;font-size:clamp(38px,8vw,56px);font-weight:850;padding:2px}
+.rest-input{display:block;width:100%;height:clamp(52px,8vh,68px);border:0;border-radius:0;background:#fff;color:#000;text-align:center;font-size:clamp(30px,6.5vw,48px);font-weight:850;padding:2px;min-width:0}
 .rest-action{width:100%}
 .rest-action.on{background:#000;color:#fff}
 .status{font-size:10px;text-align:center;min-height:12px;font-weight:650;line-height:1.15}
@@ -59,7 +60,7 @@ button:active{background:#eee}
 <section class="panel"><div class="pill">휴식</div><div class="timer" aria-label="휴식 타이머">
   <div class="time-part" id="minutes">01</div>
   <div class="time-part" id="seconds">00</div>
-</div><div class="rest-controls"><div class="rest-setting"><div class="rest-label">휴식 시간 (초)</div><div class="rest-setting-line"></div><input class="rest-input" id="restInput" type="number" min="5" max="3600" value="60" inputmode="numeric"></div><button class="rest-action" id="wakeToggle" aria-pressed="false">화면 켜짐</button><button class="rest-action" id="reset">초기화</button><div class="status" id="status">+1을 누르면 휴식이 시작됩니다.</div><div class="wake-info" id="wakeInfo"></div></div></section>
+</div><div class="rest-controls"><div class="settings-row"><div class="rest-setting"><div class="rest-label">휴식 시간 (초)</div><div class="rest-setting-line"></div><input class="rest-input" id="restInput" type="number" min="5" max="3600" value="60" inputmode="numeric" aria-label="휴식 시간 초"></div><div class="rest-setting"><div class="rest-label">음성 카운트다운 (초)</div><div class="rest-setting-line"></div><input class="rest-input" id="countdownInput" type="number" min="1" max="3600" value="5" inputmode="numeric" aria-label="음성 카운트다운 초"></div></div><button class="rest-action" id="wakeToggle" aria-pressed="false">화면 켜짐</button><button class="rest-action" id="reset">초기화</button><div class="status" id="status">+1을 누르면 휴식이 시작됩니다.</div><div class="wake-info" id="wakeInfo"></div></div></section>
 </div></main>
 <script>
 let count=0,remaining=60,interval=null,running=false,lastSpoken=null;let wakeLock=null,wakeEnabled=false;const $=id=>document.getElementById(id);
@@ -73,9 +74,9 @@ async function requestWakeLock(){if(!wakeEnabled||!('wakeLock'in navigator))retu
 async function setWakeEnabled(v){wakeEnabled=v;$('wakeToggle').classList.toggle('on',v);$('wakeToggle').setAttribute('aria-pressed',String(v));if(v){if(!('wakeLock'in navigator)){wakeEnabled=false;$('wakeToggle').classList.remove('on');$('wakeToggle').setAttribute('aria-pressed','false');$('wakeInfo').textContent='이 브라우저는 화면 켜짐 유지를 지원하지 않습니다.';return}$('wakeInfo').textContent='화면 켜짐 유지가 켜졌습니다.';await requestWakeLock()}else{if(wakeLock){await wakeLock.release();wakeLock=null}$('wakeInfo').textContent=''}}
 $('wakeToggle').onclick=()=>setWakeEnabled(!wakeEnabled);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&wakeEnabled)requestWakeLock()});
 function stop(){if(interval)clearInterval(interval);interval=null;running=false}
-function tick(){if(remaining<=0){stop();$('status').textContent='휴식 종료! 다음 운동을 시작하세요.';say('휴식 종료! 다음 운동을 시작하세요.');draw();return}if(remaining<=5&&lastSpoken!==remaining){lastSpoken=remaining;say(String(remaining))}remaining--;draw()}
+function tick(){if(remaining<=0){stop();$('status').textContent='휴식 종료! 다음 운동을 시작하세요.';say('휴식 종료! 다음 운동을 시작하세요.');draw();return}const countdown=Math.max(1,Math.min(3600,Number($('countdownInput').value)||5));if(remaining<=countdown&&lastSpoken!==remaining){lastSpoken=remaining;say(String(remaining))}remaining--;draw()}
 function start(){if(interval)clearInterval(interval);if(remaining<=0)remaining=Number($('restInput').value)||60;running=true;lastSpoken=null;$('status').textContent='휴식 중';draw();interval=setInterval(tick,1000)}
 $('plus').onclick=()=>{count++;draw();say(count+'회');remaining=Math.max(5,Math.min(3600,Number($('restInput').value)||60));start()};$('minus').onclick=()=>{count=Math.max(0,count-1);draw()};
-$('reset').onclick=()=>{stop();count=0;remaining=Math.max(5,Math.min(3600,Number($('restInput').value)||60));$('status').textContent='초기화되었습니다.';draw()};$('restInput').onchange=()=>{const v=Math.max(5,Math.min(3600,Number($('restInput').value)||60));$('restInput').value=v;if(!running){remaining=v;draw()}};
+$('reset').onclick=()=>{stop();count=0;remaining=Math.max(5,Math.min(3600,Number($('restInput').value)||60));$('status').textContent='초기화되었습니다.';draw()};$('restInput').onchange=()=>{const v=Math.max(5,Math.min(3600,Number($('restInput').value)||60));$('restInput').value=v;if(!running){remaining=v;draw()}};$('countdownInput').onchange=()=>{const v=Math.max(1,Math.min(3600,Number($('countdownInput').value)||5));$('countdownInput').value=v};
 draw();if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));
 </script></body></html>
