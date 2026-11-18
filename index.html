@@ -1,46 +1,70 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#ffffff"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="운동 카운터">
-<link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>운동 카운터</title>
 <style>
 :root{color-scheme:light}
 *{box-sizing:border-box}
-html,body{width:100%;height:100%;margin:0;overflow:hidden}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;overscroll-behavior-x:none}
 body{height:100dvh;min-height:0;background:#fff;color:#000;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:max(8px,env(safe-area-inset-top)) 12px max(8px,env(safe-area-inset-bottom))}
 main{width:100%;max-width:560px;height:100%;min-height:0;margin:0 auto;padding:4px 0;position:relative;overflow:hidden}
 .app-page,.calendar-page{position:absolute;inset:4px 0;min-height:0;transition:transform .28s ease;background:#fff}
 .app-page{display:grid;grid-template-rows:minmax(0,1fr) minmax(0,3fr);gap:8px;transform:translateX(0)}
-.calendar-page{display:flex;flex-direction:column;gap:12px;padding:12px 8px;border:2px solid #000;border-radius:22px;transform:translateX(110%);overflow:hidden}
+.calendar-page{display:flex;flex-direction:column;gap:8px;padding:12px 8px;border:2px solid #000;border-radius:22px;transform:translateX(110%);overflow:hidden}
 main.calendar-open .app-page{transform:translateX(-110%)}
 main.calendar-open .calendar-page{transform:translateX(0)}
-.calendar-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.calendar-title{font-size:clamp(24px,6vw,34px);font-weight:900;text-align:center;flex:1}
-.calendar-nav{width:48px;height:44px;border-radius:14px;font-size:25px;flex:0 0 auto}
-.calendar-hint{text-align:center;font-size:13px;font-weight:700}
-.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;flex:1;min-height:0;grid-auto-rows:minmax(0,1fr)}
-.calendar-weekday,.calendar-day{display:flex;align-items:center;justify-content:center;min-width:0;border-radius:12px;font-weight:800}
-.calendar-weekday{font-size:13px}
-.calendar-day{height:auto;min-height:0;padding:0;font-size:clamp(15px,4.2vw,22px);border:1.5px solid #bbb;position:relative}
+
+/* 캘린더 스타일 */
+.calendar-top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:0 0 auto}
+.calendar-title{font-size:clamp(22px,5.5vw,32px);font-weight:900;text-align:center;flex:1}
+.calendar-nav{width:46px;height:40px;border-radius:14px;font-size:24px;flex:0 0 auto}
+.calendar-hint{text-align:center;font-size:12px;font-weight:700;flex:0 0 auto}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;flex:1.15;min-height:0;grid-auto-rows:minmax(0,1fr)}
+.calendar-weekday,.calendar-day{display:flex;align-items:center;justify-content:center;min-width:0;border-radius:11px;font-weight:800}
+.calendar-weekday{font-size:12px}
+.calendar-day{height:auto;min-height:0;padding:0;font-size:clamp(14px,3.8vw,20px);border:1.5px solid #bbb;position:relative}
 .calendar-day.empty{border:0;background:transparent;pointer-events:none}
 .calendar-day.today{outline:2px solid #000;outline-offset:-3px}
+.calendar-day.selected{box-shadow:inset 0 0 0 2.5px #000}
 .calendar-day.marked{background:#000;color:#fff;border-color:#000}
-.calendar-day.marked:after{content:'✓';position:absolute;right:4px;bottom:1px;font-size:10px}
-.calendar-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:750}
-.calendar-footer button{height:44px;font-size:16px;padding:5px 12px;border-radius:14px}
+.calendar-day.marked.selected{box-shadow:inset 0 0 0 2px #fff, 0 0 0 2px #000}
+.calendar-day.marked:after{content:'✓';position:absolute;right:4px;bottom:1px;font-size:9px}
+.calendar-day.has-memo:before{content:'•';position:absolute;left:5px;top:1px;font-size:12px;line-height:1}
+
+/* 캘린더 하단 날짜별 메모 영역 */
+.cal-memo-box{display:flex;flex-direction:column;gap:5px;border:2px solid #000;border-radius:16px;padding:7px 8px;flex:0.85;min-height:92px;background:#fff}
+.cal-memo-header{display:flex;align-items:center;justify-content:space-between;gap:6px;flex:0 0 auto}
+.cal-memo-date{font-size:13px;font-weight:850}
+.cal-toggle-mark{height:28px;padding:0 10px;font-size:12px;border-radius:999px;border:1.5px solid #000;font-weight:800}
+.cal-toggle-mark.marked{background:#000;color:#fff}
+.cal-memo-input{flex:1;min-height:0;width:100%;resize:none;border:1.5px solid #000;border-radius:10px;background:#fff;color:#000;font-family:inherit;font-size:clamp(15px,3.6vw,20px);font-weight:750;line-height:1.25;padding:6px 8px;outline:none}
+
+.calendar-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:750;flex:0 0 auto}
+.calendar-footer button{height:40px;font-size:15px;padding:4px 12px;border-radius:14px}
+
+/* 메모 패널 */
 .memo-panel{border:2px solid #000;border-radius:22px;padding:8px 10px;min-width:0;min-height:0;display:flex;flex-direction:column;gap:6px;overflow:hidden}
-.memo-panel .pill{font-size:clamp(18px,4vw,24px);padding:5px 4px}
-.memo-input{display:block;flex:1;min-height:0;width:100%;height:auto;resize:none;border:1.5px solid #000;border-radius:12px;background:#fff;color:#000;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:clamp(22px,4.5vh,38px);font-weight:850;line-height:1.15;padding:5px 9px;outline:none}
+.memo-header{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.memo-header .pill{flex:1;font-size:clamp(18px,4vw,24px);padding:5px 4px}
+.open-cal-btn{height:auto;background:#000;color:#fff;border:2px solid #000;border-radius:999px;font-weight:850;font-size:clamp(18px,4vw,24px);padding:5px 14px;line-height:1.2;white-space:nowrap}
+.open-cal-btn:active{background:#333}
+.memo-input{display:block;flex:1;min-height:0;width:100%;height:auto;resize:none;border:1.5px solid #000;border-radius:12px;background:#fff;color:#000;font-family:inherit;font-size:clamp(22px,4.5vh,38px);font-weight:850;line-height:1.15;padding:5px 9px;outline:none}
+
+/* 메인 카운터 & 타이머 */
 .columns{display:grid;grid-template-columns:1fr 1.12fr;gap:10px;min-height:0;width:100%}
 .panel{border:2px solid #000;border-radius:25px;padding:12px 10px;min-width:0;min-height:0;display:flex;flex-direction:column;align-items:stretch;overflow:hidden}
 .pill{background:#000;color:#fff;border-radius:999px;text-align:center;font-weight:850;font-size:clamp(22px,5vw,32px);padding:8px 4px;line-height:1.2;flex:0 0 auto}
 .count{font-size:clamp(82px,21vw,140px);font-weight:850;line-height:1;text-align:center;margin:auto 0}
 .counter-buttons{display:flex;flex-direction:column;gap:9px;margin-top:auto;flex:0 0 auto}
-button{font-family:inherit;color:#000;background:#fff;border:2px solid #000;border-radius:18px;font-size:clamp(20px,4.8vw,30px);font-weight:800;height:clamp(58px,9vh,76px);min-height:0;padding:7px 4px;cursor:pointer}
+button{font-family:inherit;color:#000;background:#fff;border:2px solid #000;border-radius:18px;font-size:clamp(20px,4.8vw,30px);font-weight:800;height:clamp(58px,9vh,76px);min-height:0;padding:7px 4px;cursor:pointer;touch-action:manipulation}
 button:active{background:#eee}
 .timer{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;flex:1;min-height:0;margin:4px 0}
 .time-part{font-size:clamp(58px,13vw,88px);font-weight:850;line-height:1.02;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:-.035em}
@@ -51,19 +75,19 @@ button:active{background:#eee}
 .rest-setting-line{height:2px;background:#000}
 .rest-input{display:block;width:100%;height:clamp(52px,8vh,68px);border:0;border-radius:0;background:#fff;color:#000;text-align:center;font-size:clamp(30px,6.5vw,48px);font-weight:850;padding:2px;min-width:0}
 .rest-action{width:100%}
-.action-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.action-row button{min-width:0}
 .rest-action.on{background:#000;color:#fff}
 .status{font-size:10px;text-align:center;min-height:12px;font-weight:650;line-height:1.15}
 .wake-info{font-size:9px;text-align:center;min-height:10px;line-height:1.1}
+
 @media(max-height:700px){
  .panel{padding:9px 8px;border-radius:21px}
- .calendar-page{padding:9px 7px;gap:8px}
- .calendar-grid{gap:4px}
+ .calendar-page{padding:9px 7px;gap:6px}
+ .calendar-grid{gap:3px}
  .calendar-day{border-radius:9px}
+ .cal-memo-box{padding:5px 7px;min-height:78px}
  .pill{font-size:clamp(20px,4.6vw,28px);padding:6px 3px}
  .memo-panel{padding:6px 8px;gap:5px}
- .memo-panel .pill{font-size:18px;padding:4px}
+ .memo-header .pill,.open-cal-btn{font-size:18px;padding:4px 12px}
  .memo-input{font-size:clamp(20px,4.2vh,32px);padding:4px 8px}
  .count{font-size:clamp(66px,16vh,108px)}
  button{height:clamp(50px,8vh,64px)}
@@ -75,13 +99,14 @@ button:active{background:#eee}
 @media(max-height:580px){
  main{padding:0}
  .panel{padding:7px;border-radius:17px}
- .calendar-page{padding:6px;gap:5px}
- .calendar-day{font-size:14px;border-radius:7px}
- .calendar-nav{height:36px;width:40px}
+ .calendar-page{padding:6px;gap:4px}
+ .calendar-day{font-size:13px;border-radius:7px}
+ .calendar-nav{height:32px;width:38px}
  .calendar-hint,.calendar-footer{font-size:11px}
+ .cal-memo-box{padding:4px 6px;min-height:66px}
  .pill{font-size:19px;padding:5px}
  .memo-panel{padding:4px 6px;gap:3px}
- .memo-panel .pill{font-size:16px;padding:3px}
+ .memo-header .pill,.open-cal-btn{font-size:16px;padding:3px 10px}
  .memo-input{font-size:clamp(18px,3.8vh,26px);padding:3px 6px}
  .count{font-size:56px}
  button{height:42px;font-size:18px}
@@ -91,48 +116,412 @@ button:active{background:#eee}
  .rest-input{height:36px;font-size:30px}
  .status,.wake-info{font-size:8px;min-height:8px}
 }
-</style></head>
-<body><main id="appViewport"><div class="app-page"><section class="memo-panel"><div class="pill">메모</div><textarea class="memo-input" id="memoInput" placeholder="운동 기록이나 메모를 입력하세요." aria-label="메모"></textarea></section><div class="columns">
-<section class="panel"><div class="pill">횟수</div><div class="count" id="count">0</div><div class="counter-buttons"><button id="plus">+ 1</button><button id="minus">− 1</button><button class="rest-action" id="reset">초기화</button></div></section>
-<section class="panel"><div class="pill">휴식</div><div class="timer" aria-label="휴식 타이머">
-  <div class="time-part" id="minutes">01</div>
-  <div class="time-part" id="seconds">00</div>
-</div><div class="rest-controls"><div class="settings-row"><div class="rest-setting"><div class="rest-label">휴식 시간 (초)</div><div class="rest-setting-line"></div><input class="rest-input" id="restInput" type="number" min="5" max="3600" value="60" inputmode="numeric" aria-label="휴식 시간 초"></div><div class="rest-setting"><div class="rest-label">음성 카운트다운 (초)</div><div class="rest-setting-line"></div><input class="rest-input" id="countdownInput" type="number" min="1" max="3600" value="5" inputmode="numeric" aria-label="음성 카운트다운 초"></div></div><button class="rest-action" id="wakeToggle" aria-pressed="false">화면 켜짐</button><div class="status" id="status">+1을 누르면 휴식이 시작됩니다.</div><div class="wake-info" id="wakeInfo"></div></div></section>
-</div><section class="calendar-page" aria-label="운동 기록 캘린더">
-  <div class="calendar-top"><button class="calendar-nav" id="prevMonth" aria-label="이전 달">‹</button><div class="calendar-title" id="calendarTitle">2026년 11월</div><button class="calendar-nav" id="nextMonth" aria-label="다음 달">›</button></div>
-  <div class="calendar-hint">운동한 날짜를 눌러 체크하세요 · 좌우 스와이프로 이동</div>
-  <div class="calendar-grid" id="calendarGrid"></div>
-  <div class="calendar-footer"><span id="markedCount">이번 달 운동 0일</span><button id="backToApp">메인으로 돌아가기</button></div>
-</section></main>
+</style>
+</head>
+<body>
+<main id="appViewport">
+  <div class="app-page">
+    <section class="memo-panel">
+      <div class="memo-header">
+        <div class="pill">메모</div>
+        <button type="button" class="open-cal-btn" id="openCalBtn" aria-label="운동 기록 캘린더 열기">기록</button>
+      </div>
+      <textarea class="memo-input" id="memoInput" placeholder="운동 기록이나 메모를 입력하세요." aria-label="메모"></textarea>
+    </section>
+    <div class="columns">
+      <section class="panel">
+        <div class="pill">횟수</div>
+        <div class="count" id="count">0</div>
+        <div class="counter-buttons">
+          <button type="button" id="plus">+ 1</button>
+          <button type="button" id="minus">− 1</button>
+          <button type="button" class="rest-action" id="reset">초기화</button>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="pill">휴식</div>
+        <div class="timer" aria-label="휴식 타이머">
+          <div class="time-part" id="minutes">01</div>
+          <div class="time-part" id="seconds">00</div>
+        </div>
+        <div class="rest-controls">
+          <div class="settings-row">
+            <div class="rest-setting">
+              <div class="rest-label">휴식 시간 (초)</div>
+              <div class="rest-setting-line"></div>
+              <input class="rest-input" id="restInput" type="number" min="5" max="3600" value="60" inputmode="numeric" aria-label="휴식 시간 초">
+            </div>
+            <div class="rest-setting">
+              <div class="rest-label">음성 카운트다운 (초)</div>
+              <div class="rest-setting-line"></div>
+              <input class="rest-input" id="countdownInput" type="number" min="1" max="3600" value="5" inputmode="numeric" aria-label="음성 카운트다운 초">
+            </div>
+          </div>
+          <button type="button" class="rest-action" id="wakeToggle" aria-pressed="false">화면 켜짐</button>
+          <div class="status" id="status">+1을 누르면 휴식이 시작됩니다.</div>
+          <div class="wake-info" id="wakeInfo"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <section class="calendar-page" aria-label="운동 기록 캘린더">
+    <div class="calendar-top">
+      <button type="button" class="calendar-nav" id="prevMonth" aria-label="이전 달">‹</button>
+      <div class="calendar-title" id="calendarTitle">2026년 11월</div>
+      <button type="button" class="calendar-nav" id="nextMonth" aria-label="다음 달">›</button>
+    </div>
+    <div class="calendar-hint">날짜를 선택해 메모를 확인·수정하거나 운동 여부를 체크하세요</div>
+    <div class="calendar-grid" id="calendarGrid"></div>
+    <div class="cal-memo-box">
+      <div class="cal-memo-header">
+        <span class="cal-memo-date" id="selectedDateLabel">선택된 날짜 메모</span>
+        <button type="button" class="cal-toggle-mark" id="toggleMarkBtn">운동 완료 체크</button>
+      </div>
+      <textarea class="cal-memo-input" id="calMemoInput" placeholder="이 날짜의 운동 메모가 없습니다. 여기에 직접 입력하거나 수정할 수 있습니다." aria-label="선택된 날짜 메모"></textarea>
+    </div>
+    <div class="calendar-footer">
+      <span id="markedCount">이번 달 운동 0일</span>
+      <button type="button" id="backToApp">메인으로 돌아가기</button>
+    </div>
+  </section>
+</main>
+
 <script>
-let count=0,remaining=60,interval=null,running=false,lastSpoken=null;let wakeLock=null,wakeEnabled=false;const $=id=>document.getElementById(id);
-function say(t){if(!('speechSynthesis'in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='ko-KR';u.rate=1;speechSynthesis.speak(u)}
-function draw(){
- $('count').textContent=count;
- $('minutes').textContent=String(Math.floor(remaining/60)).padStart(2,'0');
- $('seconds').textContent=String(remaining%60).padStart(2,'0');
+let count = 0, remaining = 60, interval = null, running = false, endTime = 0, lastSpoken = null;
+let wakeLock = null, wakeEnabled = false;
+const $ = id => document.getElementById(id);
+
+function say(t) {
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(t);
+  u.lang = 'ko-KR';
+  u.rate = 1;
+  speechSynthesis.speak(u);
 }
-async function requestWakeLock(){if(!wakeEnabled||!('wakeLock'in navigator))return;try{wakeLock=await navigator.wakeLock.request('screen');wakeLock.addEventListener('release',()=>{wakeLock=null})}catch(e){$('wakeInfo').textContent='화면 켜짐 유지에 실패했습니다. 저전력 모드를 확인해 주세요.'}}
-async function setWakeEnabled(v){wakeEnabled=v;$('wakeToggle').classList.toggle('on',v);$('wakeToggle').setAttribute('aria-pressed',String(v));if(v){if(!('wakeLock'in navigator)){wakeEnabled=false;$('wakeToggle').classList.remove('on');$('wakeToggle').setAttribute('aria-pressed','false');$('wakeInfo').textContent='이 브라우저는 화면 켜짐 유지를 지원하지 않습니다.';return}$('wakeInfo').textContent='화면 켜짐 유지가 켜졌습니다.';await requestWakeLock()}else{if(wakeLock){await wakeLock.release();wakeLock=null}$('wakeInfo').textContent=''}}
-$('wakeToggle').onclick=()=>setWakeEnabled(!wakeEnabled);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&wakeEnabled)requestWakeLock()});
-function stop(){if(interval)clearInterval(interval);interval=null;running=false}
-function tick(){if(remaining<=0){stop();$('status').textContent='휴식 종료! 다음 운동을 시작하세요.';say('휴식 종료! 다음 운동을 시작하세요.');draw();return}const countdown=Math.max(1,Math.min(3600,Number($('countdownInput').value)||5));if(remaining<=countdown&&lastSpoken!==remaining){lastSpoken=remaining;say(String(remaining))}remaining--;draw()}
-function start(){if(interval)clearInterval(interval);if(remaining<=0)remaining=Number($('restInput').value)||60;running=true;lastSpoken=null;$('status').textContent='휴식 중';draw();interval=setInterval(tick,1000)}
-$('plus').onclick=()=>{count++;draw();say(count+'회');remaining=Math.max(5,Math.min(3600,Number($('restInput').value)||60));start()};$('minus').onclick=()=>{count=Math.max(0,count-1);draw()};
-$('reset').onclick=()=>{stop();count=0;remaining=Math.max(5,Math.min(3600,Number($('restInput').value)||60));$('status').textContent='초기화되었습니다.';draw()};$('restInput').onchange=()=>{const v=Math.max(5,Math.min(3600,Number($('restInput').value)||60));$('restInput').value=v;if(!running){remaining=v;draw()}};$('countdownInput').onchange=()=>{const v=Math.max(1,Math.min(3600,Number($('countdownInput').value)||5));$('countdownInput').value=v};
-const memoInput=$('memoInput');memoInput.value=localStorage.getItem('workoutCounterMemo')||'';memoInput.addEventListener('input',()=>localStorage.setItem('workoutCounterMemo',memoInput.value));
-// 운동 날짜 캘린더: 날짜를 직접 체크하거나 +1 운동 시 자동 기록
-const calendarStoreKey='workoutCounterWorkoutDays';let workoutDays=new Set();try{workoutDays=new Set(JSON.parse(localStorage.getItem(calendarStoreKey)||'[]'))}catch(e){}
-let calendarMonth=new Date();calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth(),1);
-const dateKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-function saveWorkoutDays(){localStorage.setItem(calendarStoreKey,JSON.stringify([...workoutDays]))}
-function markToday(){workoutDays.add(dateKey(new Date()));saveWorkoutDays()}
-function renderCalendar(){const y=calendarMonth.getFullYear(),m=calendarMonth.getMonth();$('calendarTitle').textContent=`${y}년 ${m+1}월`;const grid=$('calendarGrid');grid.innerHTML='';['일','월','화','수','목','금','토'].forEach(w=>{const el=document.createElement('div');el.className='calendar-weekday';el.textContent=w;grid.appendChild(el)});const first=new Date(y,m,1).getDay(),last=new Date(y,m+1,0).getDate();for(let i=0;i<first;i++){const blank=document.createElement('div');blank.className='calendar-day empty';grid.appendChild(blank)}for(let day=1;day<=last;day++){const d=new Date(y,m,day),key=dateKey(d),btn=document.createElement('button');btn.type='button';btn.className='calendar-day';btn.textContent=day;if(workoutDays.has(key))btn.classList.add('marked');if(key===dateKey(new Date()))btn.classList.add('today');btn.setAttribute('aria-label',`${y}년 ${m+1}월 ${day}일${workoutDays.has(key)?', 운동 완료':''}`);btn.setAttribute('aria-pressed',String(workoutDays.has(key)));btn.addEventListener('click',()=>{if(workoutDays.has(key))workoutDays.delete(key);else workoutDays.add(key);saveWorkoutDays();renderCalendar()});grid.appendChild(btn)}$('markedCount').textContent=`이번 달 운동 ${[...workoutDays].filter(k=>k.startsWith(`${y}-${String(m+1).padStart(2,'0')}-`)).length}일`}
-function showCalendar(show){$('appViewport').classList.toggle('calendar-open',show);if(show)renderCalendar()}
-$('prevMonth').onclick=()=>{calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()-1,1);renderCalendar()};$('nextMonth').onclick=()=>{calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()+1,1);renderCalendar()};$('backToApp').onclick=()=>showCalendar(false);
-let swipeStartX=0,swipeStartY=0;const viewport=$('appViewport');viewport.addEventListener('touchstart',e=>{if(e.touches.length!==1||e.target.closest('button,input,textarea'))return;swipeStartX=e.touches[0].clientX;swipeStartY=e.touches[0].clientY},{passive:true});viewport.addEventListener('touchend',e=>{if(!swipeStartX)return;const dx=e.changedTouches[0].clientX-swipeStartX,dy=e.changedTouches[0].clientY-swipeStartY;if(Math.abs(dx)>65&&Math.abs(dx)>Math.abs(dy)*1.25)showCalendar(dx<0);swipeStartX=0;swipeStartY=0},{passive:true});
-// 데스크톱 테스트용 마우스 드래그도 지원
-let mouseStartX=null;viewport.addEventListener('mousedown',e=>{if(e.target.closest('button,input,textarea'))return;mouseStartX=e.clientX});viewport.addEventListener('mouseup',e=>{if(mouseStartX===null)return;const dx=e.clientX-mouseStartX;if(Math.abs(dx)>80)showCalendar(dx<0);mouseStartX=null});
-const originalPlus=$('plus').onclick;$('plus').onclick=()=>{originalPlus();markToday()};
-draw();if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));
-</script></body></html>
+
+function draw() {
+  $('count').textContent = count;
+  $('minutes').textContent = String(Math.floor(remaining / 60)).padStart(2, '0');
+  $('seconds').textContent = String(remaining % 60).padStart(2, '0');
+}
+
+async function requestWakeLock() {
+  if (!wakeEnabled || !('wakeLock' in navigator)) return;
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', () => { wakeLock = null; });
+  } catch (e) {
+    $('wakeInfo').textContent = '화면 켜짐 유지에 실패했습니다. 저전력 모드를 확인해 주세요.';
+  }
+}
+
+async function setWakeEnabled(v) {
+  wakeEnabled = v;
+  $('wakeToggle').classList.toggle('on', v);
+  $('wakeToggle').setAttribute('aria-pressed', String(v));
+  if (v) {
+    if (!('wakeLock' in navigator)) {
+      wakeEnabled = false;
+      $('wakeToggle').classList.remove('on');
+      $('wakeToggle').setAttribute('aria-pressed', 'false');
+      $('wakeInfo').textContent = '이 브라우저는 화면 켜짐 유지를 지원하지 않습니다.';
+      return;
+    }
+    $('wakeInfo').textContent = '화면 켜짐 유지가 켜졌습니다.';
+    await requestWakeLock();
+  } else {
+    if (wakeLock) {
+      await wakeLock.release();
+      wakeLock = null;
+    }
+    $('wakeInfo').textContent = '';
+  }
+}
+
+$('wakeToggle').onclick = () => setWakeEnabled(!wakeEnabled);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    if (wakeEnabled) requestWakeLock();
+    if (running) tick();
+  }
+});
+
+function stop() {
+  if (interval) clearInterval(interval);
+  interval = null;
+  running = false;
+}
+
+function tick() {
+  remaining = Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
+  if (remaining <= 0) {
+    stop();
+    $('status').textContent = '휴식 종료! 다음 운동을 시작하세요.';
+    say('휴식 종료! 다음 운동을 시작하세요.');
+    draw();
+    return;
+  }
+  const countdown = Math.max(1, Math.min(3600, Number($('countdownInput').value) || 5));
+  if (remaining <= countdown && lastSpoken !== remaining) {
+    lastSpoken = remaining;
+    say(String(remaining));
+  }
+  draw();
+}
+
+function start() {
+  if (interval) clearInterval(interval);
+  if (remaining <= 0) remaining = Number($('restInput').value) || 60;
+  endTime = Date.now() + remaining * 1000;
+  running = true;
+  lastSpoken = null;
+  $('status').textContent = '휴식 중';
+  draw();
+  interval = setInterval(tick, 250);
+}
+
+$('plus').onclick = () => {
+  count++;
+  draw();
+  say(count + '회');
+  remaining = Math.max(5, Math.min(3600, Number($('restInput').value) || 60));
+  start();
+  markToday();
+};
+
+$('minus').onclick = () => {
+  count = Math.max(0, count - 1);
+  draw();
+};
+
+$('reset').onclick = () => {
+  stop();
+  count = 0;
+  remaining = Math.max(5, Math.min(3600, Number($('restInput').value) || 60));
+  $('status').textContent = '초기화되었습니다.';
+  draw();
+};
+
+$('restInput').onchange = () => {
+  const v = Math.max(5, Math.min(3600, Number($('restInput').value) || 60));
+  $('restInput').value = v;
+  if (!running) {
+    remaining = v;
+    draw();
+  }
+};
+
+$('countdownInput').onchange = () => {
+  const v = Math.max(1, Math.min(3600, Number($('countdownInput').value) || 5));
+  $('countdownInput').value = v;
+};
+
+/* 날짜 포맷 및 스토리지 관리 */
+const dateKey = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const calendarStoreKey = 'workoutCounterWorkoutDays';
+const memoByDateStoreKey = 'workoutCounterMemosByDate';
+
+let workoutDays = new Set();
+try {
+  workoutDays = new Set(JSON.parse(localStorage.getItem(calendarStoreKey) || '[]'))
+} catch (e) {}
+
+let memosByDate = {};
+try {
+  memosByDate = JSON.parse(localStorage.getItem(memoByDateStoreKey) || '{}') || {};
+} catch (e) {}
+
+/* 기존 단일 메모 데이터가 있으면 오늘 날짜로 마이그레이션 */
+const todayStr = dateKey(new Date());
+const legacyMemo = localStorage.getItem('workoutCounterMemo');
+if (legacyMemo && !memosByDate[todayStr]) {
+  memosByDate[todayStr] = legacyMemo;
+  localStorage.setItem(memoByDateStoreKey, JSON.stringify(memosByDate));
+}
+
+function saveWorkoutDays() {
+  localStorage.setItem(calendarStoreKey, JSON.stringify([...workoutDays]));
+}
+
+function saveMemosByDate() {
+  localStorage.setItem(memoByDateStoreKey, JSON.stringify(memosByDate));
+}
+
+/* 메인 화면 메모 (오늘 날짜 기준 동기화) */
+const memoInput = $('memoInput');
+memoInput.value = memosByDate[todayStr] || '';
+memoInput.addEventListener('input', () => {
+  const currentToday = dateKey(new Date());
+  const val = memoInput.value;
+  if (val.trim()) memosByDate[currentToday] = val;
+  else delete memosByDate[currentToday];
+  saveMemosByDate();
+  if (selectedDateKey === currentToday) {
+    $('calMemoInput').value = val;
+  }
+});
+
+function markToday() {
+  const currentToday = dateKey(new Date());
+  workoutDays.add(currentToday);
+  saveWorkoutDays();
+  if (memoInput.value.trim()) {
+    memosByDate[currentToday] = memoInput.value;
+    saveMemosByDate();
+  }
+}
+
+/* 캘린더 상태 및 렌더링 */
+let calendarMonth = new Date();
+calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1);
+let selectedDateKey = todayStr;
+
+function formatKoreanDate(key) {
+  const [y, m, d] = key.split('-').map(Number);
+  return `${y}년 ${m}월 ${d}일`;
+}
+
+function updateSelectedDatePanel() {
+  $('selectedDateLabel').textContent = `${formatKoreanDate(selectedDateKey)} 메모`;
+  $('calMemoInput').value = memosByDate[selectedDateKey] || '';
+  const isMarked = workoutDays.has(selectedDateKey);
+  const toggleBtn = $('toggleMarkBtn');
+  toggleBtn.classList.toggle('marked', isMarked);
+  toggleBtn.textContent = isMarked ? '운동 완료 ✓' : '운동 체크하기';
+}
+
+$('calMemoInput').addEventListener('input', () => {
+  const val = $('calMemoInput').value;
+  if (val.trim()) memosByDate[selectedDateKey] = val;
+  else delete memosByDate[selectedDateKey];
+  saveMemosByDate();
+
+  /* 오늘 날짜 메모를 캘린더에서 수정한 경우 메인 메모창에도 즉시 반영 */
+  if (selectedDateKey === dateKey(new Date())) {
+    memoInput.value = val;
+  }
+  renderCalendar(false);
+});
+
+$('toggleMarkBtn').addEventListener('click', () => {
+  if (workoutDays.has(selectedDateKey)) workoutDays.delete(selectedDateKey);
+  else workoutDays.add(selectedDateKey);
+  saveWorkoutDays();
+  updateSelectedDatePanel();
+  renderCalendar(false);
+});
+
+function renderCalendar(updatePanel = true) {
+  const y = calendarMonth.getFullYear(), m = calendarMonth.getMonth();
+  $('calendarTitle').textContent = `${y}년 ${m + 1}월`;
+  const grid = $('calendarGrid');
+  grid.innerHTML = '';
+
+  ['일', '월', '화', '수', '목', '금', '토'].forEach(w => {
+    const el = document.createElement('div');
+    el.className = 'calendar-weekday';
+    el.textContent = w;
+    grid.appendChild(el);
+  });
+
+  const first = new Date(y, m, 1).getDay();
+  const last = new Date(y, m + 1, 0).getDate();
+
+  for (let i = 0; i < first; i++) {
+    const blank = document.createElement('div');
+    blank.className = 'calendar-day empty';
+    grid.appendChild(blank);
+  }
+
+  for (let day = 1; day <= last; day++) {
+    const d = new Date(y, m, day);
+    const key = dateKey(d);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'calendar-day';
+    btn.textContent = day;
+    if (workoutDays.has(key)) btn.classList.add('marked');
+    if (memosByDate[key] && memosByDate[key].trim()) btn.classList.add('has-memo');
+    if (key === dateKey(new Date())) btn.classList.add('today');
+    if (key === selectedDateKey) btn.classList.add('selected');
+    btn.setAttribute('aria-label', `${y}년 ${m + 1}월 ${day}일${workoutDays.has(key) ? ', 운동 완료' : ''}`);
+    btn.addEventListener('click', () => {
+      selectedDateKey = key;
+      renderCalendar(true);
+    });
+    grid.appendChild(btn);
+  }
+
+  const countInMonth = [...workoutDays].filter(k => k.startsWith(`${y}-${String(m + 1).padStart(2, '0')}-`)).length;
+  $('markedCount').textContent = `이번 달 운동 ${countInMonth}일`;
+  if (updatePanel) updateSelectedDatePanel();
+}
+
+function showCalendar(show) {
+  $('appViewport').classList.toggle('calendar-open', show);
+  if (show) {
+    selectedDateKey = dateKey(new Date());
+    calendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    renderCalendar(true);
+  }
+}
+
+$('openCalBtn').onclick = () => showCalendar(true);
+$('prevMonth').onclick = () => {
+  calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1);
+  renderCalendar(false);
+};
+$('nextMonth').onclick = () => {
+  calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1);
+  renderCalendar(false);
+};
+$('backToApp').onclick = () => showCalendar(false);
+
+let swipeStartX = null, swipeStartY = null;
+const viewport = $('appViewport');
+
+viewport.addEventListener('touchstart', e => {
+  if (e.touches.length !== 1 || e.target.closest('button,input,textarea')) return;
+  swipeStartX = e.touches[0].clientX;
+  swipeStartY = e.touches[0].clientY;
+}, { passive: true });
+
+viewport.addEventListener('touchend', e => {
+  if (swipeStartX === null) return;
+  const dx = e.changedTouches[0].clientX - swipeStartX;
+  const dy = e.changedTouches[0].clientY - swipeStartY;
+  if (Math.abs(dx) > 65 && Math.abs(dx) > Math.abs(dy) * 1.25) {
+    const isOpen = viewport.classList.contains('calendar-open');
+    if (!isOpen && dx < 0) showCalendar(true);
+    if (isOpen && dx > 0) showCalendar(false);
+  }
+  swipeStartX = null;
+  swipeStartY = null;
+}, { passive: true });
+
+let mouseStartX = null;
+viewport.addEventListener('mousedown', e => {
+  if (e.target.closest('button,input,textarea')) return;
+  mouseStartX = e.clientX;
+});
+
+viewport.addEventListener('mouseup', e => {
+  if (mouseStartX === null) return;
+  const dx = e.clientX - mouseStartX;
+  if (Math.abs(dx) > 80) {
+    const isOpen = viewport.classList.contains('calendar-open');
+    if (!isOpen && dx < 0) showCalendar(true);
+    if (isOpen && dx > 0) showCalendar(false);
+  }
+  mouseStartX = null;
+});
+
+draw();
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+}
+</script>
+</body>
+</html>
