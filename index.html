@@ -12,7 +12,26 @@
 *{box-sizing:border-box}
 html,body{width:100%;height:100%;margin:0;overflow:hidden}
 body{height:100dvh;min-height:0;background:#fff;color:#000;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:max(8px,env(safe-area-inset-top)) 12px max(8px,env(safe-area-inset-bottom))}
-main{width:100%;max-width:560px;height:100%;min-height:0;margin:0 auto;padding:4px 0;display:grid;grid-template-rows:minmax(0,1fr) minmax(0,3fr);gap:8px;overflow:hidden}
+main{width:100%;max-width:560px;height:100%;min-height:0;margin:0 auto;padding:4px 0;position:relative;overflow:hidden}
+.app-page,.calendar-page{position:absolute;inset:4px 0;min-height:0;transition:transform .28s ease;background:#fff}
+.app-page{display:grid;grid-template-rows:minmax(0,1fr) minmax(0,3fr);gap:8px;transform:translateX(0)}
+.calendar-page{display:flex;flex-direction:column;gap:12px;padding:12px 8px;border:2px solid #000;border-radius:22px;transform:translateX(110%);overflow:hidden}
+main.calendar-open .app-page{transform:translateX(-110%)}
+main.calendar-open .calendar-page{transform:translateX(0)}
+.calendar-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.calendar-title{font-size:clamp(24px,6vw,34px);font-weight:900;text-align:center;flex:1}
+.calendar-nav{width:48px;height:44px;border-radius:14px;font-size:25px;flex:0 0 auto}
+.calendar-hint{text-align:center;font-size:13px;font-weight:700}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;flex:1;min-height:0;grid-auto-rows:minmax(0,1fr)}
+.calendar-weekday,.calendar-day{display:flex;align-items:center;justify-content:center;min-width:0;border-radius:12px;font-weight:800}
+.calendar-weekday{font-size:13px}
+.calendar-day{height:auto;min-height:0;padding:0;font-size:clamp(15px,4.2vw,22px);border:1.5px solid #bbb;position:relative}
+.calendar-day.empty{border:0;background:transparent;pointer-events:none}
+.calendar-day.today{outline:2px solid #000;outline-offset:-3px}
+.calendar-day.marked{background:#000;color:#fff;border-color:#000}
+.calendar-day.marked:after{content:'✓';position:absolute;right:4px;bottom:1px;font-size:10px}
+.calendar-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:750}
+.calendar-footer button{height:44px;font-size:16px;padding:5px 12px;border-radius:14px}
 .memo-panel{border:2px solid #000;border-radius:22px;padding:8px 10px;min-width:0;min-height:0;display:flex;flex-direction:column;gap:6px;overflow:hidden}
 .memo-panel .pill{font-size:clamp(18px,4vw,24px);padding:5px 4px}
 .memo-input{display:block;flex:1;min-height:0;width:100%;height:auto;resize:none;border:1.5px solid #000;border-radius:12px;background:#fff;color:#000;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:clamp(22px,4.5vh,38px);font-weight:850;line-height:1.15;padding:5px 9px;outline:none}
@@ -39,6 +58,9 @@ button:active{background:#eee}
 .wake-info{font-size:9px;text-align:center;min-height:10px;line-height:1.1}
 @media(max-height:700px){
  .panel{padding:9px 8px;border-radius:21px}
+ .calendar-page{padding:9px 7px;gap:8px}
+ .calendar-grid{gap:4px}
+ .calendar-day{border-radius:9px}
  .pill{font-size:clamp(20px,4.6vw,28px);padding:6px 3px}
  .memo-panel{padding:6px 8px;gap:5px}
  .memo-panel .pill{font-size:18px;padding:4px}
@@ -53,6 +75,10 @@ button:active{background:#eee}
 @media(max-height:580px){
  main{padding:0}
  .panel{padding:7px;border-radius:17px}
+ .calendar-page{padding:6px;gap:5px}
+ .calendar-day{font-size:14px;border-radius:7px}
+ .calendar-nav{height:36px;width:40px}
+ .calendar-hint,.calendar-footer{font-size:11px}
  .pill{font-size:19px;padding:5px}
  .memo-panel{padding:4px 6px;gap:3px}
  .memo-panel .pill{font-size:16px;padding:3px}
@@ -66,13 +92,18 @@ button:active{background:#eee}
  .status,.wake-info{font-size:8px;min-height:8px}
 }
 </style></head>
-<body><main><section class="memo-panel"><div class="pill">메모</div><textarea class="memo-input" id="memoInput" placeholder="운동 기록이나 메모를 입력하세요." aria-label="메모"></textarea></section><div class="columns">
+<body><main id="appViewport"><div class="app-page"><section class="memo-panel"><div class="pill">메모</div><textarea class="memo-input" id="memoInput" placeholder="운동 기록이나 메모를 입력하세요." aria-label="메모"></textarea></section><div class="columns">
 <section class="panel"><div class="pill">횟수</div><div class="count" id="count">0</div><div class="counter-buttons"><button id="plus">+ 1</button><button id="minus">− 1</button><button class="rest-action" id="reset">초기화</button></div></section>
 <section class="panel"><div class="pill">휴식</div><div class="timer" aria-label="휴식 타이머">
   <div class="time-part" id="minutes">01</div>
   <div class="time-part" id="seconds">00</div>
 </div><div class="rest-controls"><div class="settings-row"><div class="rest-setting"><div class="rest-label">휴식 시간 (초)</div><div class="rest-setting-line"></div><input class="rest-input" id="restInput" type="number" min="5" max="3600" value="60" inputmode="numeric" aria-label="휴식 시간 초"></div><div class="rest-setting"><div class="rest-label">음성 카운트다운 (초)</div><div class="rest-setting-line"></div><input class="rest-input" id="countdownInput" type="number" min="1" max="3600" value="5" inputmode="numeric" aria-label="음성 카운트다운 초"></div></div><button class="rest-action" id="wakeToggle" aria-pressed="false">화면 켜짐</button><div class="status" id="status">+1을 누르면 휴식이 시작됩니다.</div><div class="wake-info" id="wakeInfo"></div></div></section>
-</div></main>
+</div><section class="calendar-page" aria-label="운동 기록 캘린더">
+  <div class="calendar-top"><button class="calendar-nav" id="prevMonth" aria-label="이전 달">‹</button><div class="calendar-title" id="calendarTitle">2026년 11월</div><button class="calendar-nav" id="nextMonth" aria-label="다음 달">›</button></div>
+  <div class="calendar-hint">운동한 날짜를 눌러 체크하세요 · 좌우 스와이프로 이동</div>
+  <div class="calendar-grid" id="calendarGrid"></div>
+  <div class="calendar-footer"><span id="markedCount">이번 달 운동 0일</span><button id="backToApp">메인으로 돌아가기</button></div>
+</section></main>
 <script>
 let count=0,remaining=60,interval=null,running=false,lastSpoken=null;let wakeLock=null,wakeEnabled=false;const $=id=>document.getElementById(id);
 function say(t){if(!('speechSynthesis'in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='ko-KR';u.rate=1;speechSynthesis.speak(u)}
@@ -90,5 +121,18 @@ function start(){if(interval)clearInterval(interval);if(remaining<=0)remaining=N
 $('plus').onclick=()=>{count++;draw();say(count+'회');remaining=Math.max(5,Math.min(3600,Number($('restInput').value)||60));start()};$('minus').onclick=()=>{count=Math.max(0,count-1);draw()};
 $('reset').onclick=()=>{stop();count=0;remaining=Math.max(5,Math.min(3600,Number($('restInput').value)||60));$('status').textContent='초기화되었습니다.';draw()};$('restInput').onchange=()=>{const v=Math.max(5,Math.min(3600,Number($('restInput').value)||60));$('restInput').value=v;if(!running){remaining=v;draw()}};$('countdownInput').onchange=()=>{const v=Math.max(1,Math.min(3600,Number($('countdownInput').value)||5));$('countdownInput').value=v};
 const memoInput=$('memoInput');memoInput.value=localStorage.getItem('workoutCounterMemo')||'';memoInput.addEventListener('input',()=>localStorage.setItem('workoutCounterMemo',memoInput.value));
+// 운동 날짜 캘린더: 날짜를 직접 체크하거나 +1 운동 시 자동 기록
+const calendarStoreKey='workoutCounterWorkoutDays';let workoutDays=new Set();try{workoutDays=new Set(JSON.parse(localStorage.getItem(calendarStoreKey)||'[]'))}catch(e){}
+let calendarMonth=new Date();calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth(),1);
+const dateKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+function saveWorkoutDays(){localStorage.setItem(calendarStoreKey,JSON.stringify([...workoutDays]))}
+function markToday(){workoutDays.add(dateKey(new Date()));saveWorkoutDays()}
+function renderCalendar(){const y=calendarMonth.getFullYear(),m=calendarMonth.getMonth();$('calendarTitle').textContent=`${y}년 ${m+1}월`;const grid=$('calendarGrid');grid.innerHTML='';['일','월','화','수','목','금','토'].forEach(w=>{const el=document.createElement('div');el.className='calendar-weekday';el.textContent=w;grid.appendChild(el)});const first=new Date(y,m,1).getDay(),last=new Date(y,m+1,0).getDate();for(let i=0;i<first;i++){const blank=document.createElement('div');blank.className='calendar-day empty';grid.appendChild(blank)}for(let day=1;day<=last;day++){const d=new Date(y,m,day),key=dateKey(d),btn=document.createElement('button');btn.type='button';btn.className='calendar-day';btn.textContent=day;if(workoutDays.has(key))btn.classList.add('marked');if(key===dateKey(new Date()))btn.classList.add('today');btn.setAttribute('aria-label',`${y}년 ${m+1}월 ${day}일${workoutDays.has(key)?', 운동 완료':''}`);btn.setAttribute('aria-pressed',String(workoutDays.has(key)));btn.addEventListener('click',()=>{if(workoutDays.has(key))workoutDays.delete(key);else workoutDays.add(key);saveWorkoutDays();renderCalendar()});grid.appendChild(btn)}$('markedCount').textContent=`이번 달 운동 ${[...workoutDays].filter(k=>k.startsWith(`${y}-${String(m+1).padStart(2,'0')}-`)).length}일`}
+function showCalendar(show){$('appViewport').classList.toggle('calendar-open',show);if(show)renderCalendar()}
+$('prevMonth').onclick=()=>{calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()-1,1);renderCalendar()};$('nextMonth').onclick=()=>{calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()+1,1);renderCalendar()};$('backToApp').onclick=()=>showCalendar(false);
+let swipeStartX=0,swipeStartY=0;const viewport=$('appViewport');viewport.addEventListener('touchstart',e=>{if(e.touches.length!==1||e.target.closest('button,input,textarea'))return;swipeStartX=e.touches[0].clientX;swipeStartY=e.touches[0].clientY},{passive:true});viewport.addEventListener('touchend',e=>{if(!swipeStartX)return;const dx=e.changedTouches[0].clientX-swipeStartX,dy=e.changedTouches[0].clientY-swipeStartY;if(Math.abs(dx)>65&&Math.abs(dx)>Math.abs(dy)*1.25)showCalendar(dx<0);swipeStartX=0;swipeStartY=0},{passive:true});
+// 데스크톱 테스트용 마우스 드래그도 지원
+let mouseStartX=null;viewport.addEventListener('mousedown',e=>{if(e.target.closest('button,input,textarea'))return;mouseStartX=e.clientX});viewport.addEventListener('mouseup',e=>{if(mouseStartX===null)return;const dx=e.clientX-mouseStartX;if(Math.abs(dx)>80)showCalendar(dx<0);mouseStartX=null});
+const originalPlus=$('plus').onclick;$('plus').onclick=()=>{originalPlus();markToday()};
 draw();if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));
 </script></body></html>
