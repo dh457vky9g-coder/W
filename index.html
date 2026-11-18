@@ -12,8 +12,11 @@
 *{box-sizing:border-box}
 html,body{width:100%;height:100%;margin:0;overflow:hidden}
 body{height:100dvh;min-height:0;background:#fff;color:#000;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:max(8px,env(safe-area-inset-top)) 12px max(8px,env(safe-area-inset-bottom))}
-main{width:100%;max-width:560px;height:100%;min-height:0;margin:0 auto;padding:4px 0;display:flex;overflow:hidden}
-.columns{display:grid;grid-template-columns:1fr 1.12fr;gap:10px;flex:1;min-height:0;width:100%}
+main{width:100%;max-width:560px;height:100%;min-height:0;margin:0 auto;padding:4px 0;display:grid;grid-template-rows:minmax(0,1fr) minmax(0,3fr);gap:8px;overflow:hidden}
+.memo-panel{border:2px solid #000;border-radius:22px;padding:8px 10px;min-width:0;min-height:0;display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.memo-panel .pill{font-size:clamp(18px,4vw,24px);padding:5px 4px}
+.memo-input{display:block;flex:1;min-height:0;width:100%;height:auto;resize:none;border:1.5px solid #000;border-radius:12px;background:#fff;color:#000;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:clamp(22px,4.5vh,38px);font-weight:850;line-height:1.15;padding:5px 9px;outline:none}
+.columns{display:grid;grid-template-columns:1fr 1.12fr;gap:10px;min-height:0;width:100%}
 .panel{border:2px solid #000;border-radius:25px;padding:12px 10px;min-width:0;min-height:0;display:flex;flex-direction:column;align-items:stretch;overflow:hidden}
 .pill{background:#000;color:#fff;border-radius:999px;text-align:center;font-weight:850;font-size:clamp(22px,5vw,32px);padding:8px 4px;line-height:1.2;flex:0 0 auto}
 .count{font-size:clamp(82px,21vw,140px);font-weight:850;line-height:1;text-align:center;margin:auto 0}
@@ -37,6 +40,9 @@ button:active{background:#eee}
 @media(max-height:700px){
  .panel{padding:9px 8px;border-radius:21px}
  .pill{font-size:clamp(20px,4.6vw,28px);padding:6px 3px}
+ .memo-panel{padding:6px 8px;gap:5px}
+ .memo-panel .pill{font-size:18px;padding:4px}
+ .memo-input{font-size:clamp(20px,4.2vh,32px);padding:4px 8px}
  .count{font-size:clamp(66px,16vh,108px)}
  button{height:clamp(50px,8vh,64px)}
  .counter-buttons,.rest-controls{gap:7px}
@@ -48,6 +54,9 @@ button:active{background:#eee}
  main{padding:0}
  .panel{padding:7px;border-radius:17px}
  .pill{font-size:19px;padding:5px}
+ .memo-panel{padding:4px 6px;gap:3px}
+ .memo-panel .pill{font-size:16px;padding:3px}
+ .memo-input{font-size:clamp(18px,3.8vh,26px);padding:3px 6px}
  .count{font-size:56px}
  button{height:42px;font-size:18px}
  .counter-buttons,.rest-controls{gap:5px}
@@ -57,7 +66,7 @@ button:active{background:#eee}
  .status,.wake-info{font-size:8px;min-height:8px}
 }
 </style></head>
-<body><main><div class="columns">
+<body><main><section class="memo-panel"><div class="pill">메모</div><textarea class="memo-input" id="memoInput" placeholder="운동 기록이나 메모를 입력하세요." aria-label="메모"></textarea></section><div class="columns">
 <section class="panel"><div class="pill">횟수</div><div class="count" id="count">0</div><div class="counter-buttons"><button id="plus">+ 1</button><button id="minus">− 1</button><button class="rest-action" id="reset">초기화</button></div></section>
 <section class="panel"><div class="pill">휴식</div><div class="timer" aria-label="휴식 타이머">
   <div class="time-part" id="minutes">01</div>
@@ -80,5 +89,6 @@ function tick(){if(remaining<=0){stop();$('status').textContent='휴식 종료! 
 function start(){if(interval)clearInterval(interval);if(remaining<=0)remaining=Number($('restInput').value)||60;running=true;lastSpoken=null;$('status').textContent='휴식 중';draw();interval=setInterval(tick,1000)}
 $('plus').onclick=()=>{count++;draw();say(count+'회');remaining=Math.max(5,Math.min(3600,Number($('restInput').value)||60));start()};$('minus').onclick=()=>{count=Math.max(0,count-1);draw()};
 $('reset').onclick=()=>{stop();count=0;remaining=Math.max(5,Math.min(3600,Number($('restInput').value)||60));$('status').textContent='초기화되었습니다.';draw()};$('restInput').onchange=()=>{const v=Math.max(5,Math.min(3600,Number($('restInput').value)||60));$('restInput').value=v;if(!running){remaining=v;draw()}};$('countdownInput').onchange=()=>{const v=Math.max(1,Math.min(3600,Number($('countdownInput').value)||5));$('countdownInput').value=v};
+const memoInput=$('memoInput');memoInput.value=localStorage.getItem('workoutCounterMemo')||'';memoInput.addEventListener('input',()=>localStorage.setItem('workoutCounterMemo',memoInput.value));
 draw();if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));
 </script></body></html>
